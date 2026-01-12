@@ -1,0 +1,52 @@
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+nginx/logs/
+logs/
+
+# Data
+data/
+
+# SSL Certificates
+nginx/ssl/*.key
+nginx/ssl/*.crt
+nginx/ssl/*.pem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+.directory
+
+# Temporary files
+*.tmp
+*.temp
+~*
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
