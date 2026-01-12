@@ -349,6 +349,57 @@ docker compose build [service]  # Build without deploying
 - **Korean IP whitelist**: Cannot be bypassed without user request
 - **No Prisma in lotto-service**: Uses direct `pg` connections with schema-specific search paths
 
+## Troubleshooting
+
+### Nginx 403 Forbidden 에러 (정적 파일)
+
+**증상**: 브라우저에서 특정 JS/CSS 파일 로드 시 403 에러 발생, 빈 화면 표시
+
+**원인**: 디렉토리에 실행(x) 권한이 없으면 nginx가 해당 디렉토리에 접근 불가
+
+**진단 방법**:
+```bash
+# nginx 에러 로그 확인
+docker exec nginx-proxy tail -30 /var/log/nginx/error.log
+
+# "Permission denied" 에러 확인 시 디렉토리 권한 점검
+docker exec nginx-proxy ls -la /var/www/[project]/[path]/
+# drwx---r-- (x 권한 없음) vs drwx---r-x (정상)
+```
+
+**해결 방법**:
+```bash
+# 문제 디렉토리에 실행 권한 추가
+chmod o+x /home/deploy/nginx/www/[project]/[문제디렉토리]
+
+# 예시: blog-automation의 js/features 디렉토리
+chmod o+x /home/deploy/nginx/www/blog-automation/js/features
+
+# 수정 후 확인
+curl -s -o /dev/null -w "%{http_code}" http://localhost:[port]/[file]
+# 200 응답 확인
+```
+
+**예방**: 새 디렉토리 생성 시 `chmod 755` 또는 최소 `o+x` 권한 확인
+
+### Git 배포 상태 확인
+
+프로젝트별 git 커밋과 Docker 이미지 빌드 시간 비교로 배포 상태 확인:
+
+```bash
+# 각 프로젝트 git 최신 커밋 확인
+cd /home/deploy/projects && for dir in dashboard lotto-master today-fortune ai-chatbot author-clock; do
+  echo "$dir: $(cd $dir && git log -1 --format='%h %s (%cr)')"
+done
+
+# Docker 이미지 빌드 시간 확인
+for img in deploy-dashboard deploy-lotto-service deploy-today-fortune deploy-ai-chatbot deploy-author-clock-api; do
+  echo "$img: $(docker inspect --format='{{.Created}}' $img | cut -d'T' -f1,2)"
+done
+```
+
+**빌드 시간 < 커밋 시간**: 미배포 상태, 재빌드/재배포 필요
+
 ## Documentation
 
 Extensive documentation available in `/home/deploy/docs/`:
